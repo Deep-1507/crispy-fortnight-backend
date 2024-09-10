@@ -21,7 +21,7 @@ const doctorSchema = new mongoose.Schema({
     trim: true,
     lowercase: true,
   },
-  hospitalId: { type: String, unique: true },
+  hospitalId: { type: String },
   registrationNo: { type: String, required: true, unique: true },
   registrationCouncil: { type: String, required: true },
   otherCouncil: { type: String },

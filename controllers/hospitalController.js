@@ -1,6 +1,7 @@
 import express from "express";
 import Hospital from "../models/hospitalModel.js";
 import path from "path";
+import Category from "../models/categoryModel.js";
 import { fileURLToPath } from "url";
 const router = express.Router();
 
@@ -31,19 +32,22 @@ export const registerHospital = async (req, res) => {
       city,
       state,
       totalBeds,
-  juniorDoctors,
-  seniorDoctors,
+      juniorDoctors,
+      seniorDoctors,
       totalDoctorStaff,
       nursingStaff,
       timings, // This should be a JSON string
       insuranceClaim,
       contactDetails,
-      
+      hospitalType,
+      institutionType
     } = req.body;
 
-    // const hospitalImage = req.files.hospitalImage
-    //   ? uploadFile(req.files.hospitalImage, "hospitalImage")
-    //   : "";
+    const categories = typeof category === "string" ? JSON.parse(category) : category;
+
+    const hospitalImage = req.files.hospitalImage
+      ? uploadFile(req.files.hospitalImage, "hospitalImage")
+      : "";     
 
     console.log("Received timingSlots:", timings);
 
@@ -52,9 +56,9 @@ export const registerHospital = async (req, res) => {
 
     const hospital = new Hospital({
       hospitalName,
-      // hospitalImage,
+      hospitalImage,
       hospitalId,
-      category,
+      category: categories,
       specialization: parsedSpecializations, 
       services: parsedServices, 
       description,
@@ -64,21 +68,40 @@ export const registerHospital = async (req, res) => {
       totalDoctorStaff,
       nursingStaff,
       juniorDoctors,
-  seniorDoctors,
+      seniorDoctors,
       timings: JSON.parse(timings), // Parse the JSON string into an object
       insuranceClaim,
+      hospitalType,
+      institutionType,
       contactDetails,
       doctors:[]
     });
     await hospital.save();
 
-    await Category.findOneAndUpdate(
-      { categoryName: categories },
-      { $push: { hospitals: hospital._id } },
-      { new: true }
-    );
+    for (let cat of categories) {
+      // Check if the category exists in the Category model
+      let existingCategory = await Category.findOne({ categoryName: cat });
 
-
+      if (existingCategory) {
+        // If the category exists, update it with hospital
+        await Category.findOneAndUpdate(
+          { categoryName: cat },
+          {
+            $addToSet: { hospitals: hospital}, // Add hospital (no duplicates)
+          },
+          { new: true }
+        );
+      } else {
+        // Create a new category if it doesn't exist
+        const newCategory = new Category({
+          categoryIcon: 'https://png.pngtree.com/png-vector/20190228/ourmid/pngtree-first-aid-icon-design-template-vector-isolated-png-image_707530.jpg', // Default icon, customize as needed
+          categoryName: cat,
+          doctors: [],
+          hospitals: [hospital],
+        });
+        await newCategory.save();
+      }
+    }
 
     res.status(201).json({ message: "Hospital registered successfully!" });
   } catch (error) {

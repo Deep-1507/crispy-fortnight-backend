@@ -3,7 +3,10 @@ import mongoose from "mongoose";
 const doctorSchema = new mongoose.Schema({
   doctorName: { type: String, required: true }, // Add doctor's name for signup
   phone: { type: String, required: true }, // Add mobile number for signup
-  category: { type: String, required: true }, // Add category for signup
+  category: {
+    type: [String], // Change from String to Array of Strings
+    required: true,
+  },
   avatar: { type: String }, // Add profile avatar for signup
   password: { type: String, required: true },
   email: {
@@ -45,7 +48,7 @@ const hospitalSchema = new mongoose.Schema({
   hospitalImage:{type:String},
   hospitalId: { type: String, unique: true , required: true, },
   category: {
-    type: String,
+    type: [String], // Change from String to Array of Strings
     required: true,
   },
   specialization: [{ type: String }], 
@@ -84,10 +87,18 @@ const hospitalSchema = new mongoose.Schema({
   },
   nursingStaff: {
     type: Number,
-    required: true,
+    required: false,
   },
   insuranceClaim: {
     type: Boolean,
+    required: true,
+  },
+  hospitalType : {
+    type: String,
+    required: true,
+  },
+  institutionType: {
+    type: String,
     required: true,
   },
   contactDetails: {

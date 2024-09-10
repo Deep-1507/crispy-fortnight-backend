@@ -1,6 +1,6 @@
 import Category from '../models/categoryModel.js'; 
 
-const createCategory = async (req, res) => {
+export const createCategory = async (req, res) => {
   try {
     const {
       categoryIcon,
@@ -35,4 +35,13 @@ const createCategory = async (req, res) => {
   }
 };
 
-export default createCategory ;
+
+
+export const getCategories = async (req, res) => {
+  try {
+    const categories = await Category.find({}, 'categoryName'); // Fetch only category names
+    res.status(200).json(categories); // Send the list of categories as a response
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

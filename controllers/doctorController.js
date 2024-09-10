@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import sendApprovalEmail from "../services/emailService.js";
 import { sendRejectionEmail } from "../services/emailService.js";
 import Hospital from "../models/hospitalModel.js";
+import Category from "../models/categoryModel.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -63,7 +64,8 @@ export const registerDoctor = async (req, res) => {
       consultancyFees,
     } = req.body;
 
-    const categories = Array.isArray(category) ? category : [category];
+    const categories = typeof category === "string" ? JSON.parse(category) : category;
+
 
     console.log("Received timingSlots:", timingSlots);
 
@@ -71,12 +73,10 @@ export const registerDoctor = async (req, res) => {
     const identityProof = req.files.identityProof
       ? uploadFile(req.files.identityProof, "identityProof")
       : "";
-      const identityProof2 = req.files.identityProof2
+    const identityProof2 = req.files.identityProof2
       ? uploadFile(req.files.identityProof2, "identityProof2")
       : "";
-    const avatar = req.files.avatar
-      ? uploadFile(req.files.avatar, "avatar")
-      : "";
+    const avatar = req.files.avatar ? uploadFile(req.files.avatar, "avatar") : "";
     const medicalRegistrationProof = req.files.medicalRegistrationProof
       ? uploadFile(req.files.medicalRegistrationProof, "medicalRegistrationProof")
       : "";
@@ -87,7 +87,7 @@ export const registerDoctor = async (req, res) => {
     // Create new doctor record
     const doctor = new Doctor({
       doctorName,
-      category:categories,
+      category: categories,
       avatar,
       phone,
       otherCategory,
@@ -115,19 +115,19 @@ export const registerDoctor = async (req, res) => {
       longitude,
       email,
       description,
-      timingSlots: JSON.parse(timingSlots || '[]'), // Default to empty array if timingSlots is not provided
+      timingSlots: JSON.parse(timingSlots || "[]"), // Default to empty array if timingSlots is not provided
       consultancyFees,
       identityProof,
       identityProof2,
       medicalRegistrationProof,
-      establishmentProof
+      establishmentProof,
     });
 
     // Save doctor to database
     await doctor.save();
+
     // Find the hospital document
     const hospital = await Hospital.findOne({ hospitalId: hospitalId });
-
     if (hospital) {
       // If hospital found, update hospital with new doctor
       await Hospital.findOneAndUpdate(
@@ -135,14 +135,34 @@ export const registerDoctor = async (req, res) => {
         { $push: { doctors: doctor } }, // Push doctor ID to hospital's doctors array
         { new: true } // Return updated document
       );
-
     }
-    await Category.findOneAndUpdate(
-      { categoryName: category },
-      { $push: { doctors: doctor._id } },
-      { new: true }
-    ); 
-    
+
+    // Iterate over each category and update the Category model
+    for (let cat of categories) {
+      // Check if the category exists in the Category model
+      let existingCategory = await Category.findOne({ categoryName: cat });
+
+      if (existingCategory) {
+        // If the category exists, update it with both the doctor and hospital
+        await Category.findOneAndUpdate(
+          { categoryName: cat },
+          {
+            $addToSet: { doctors: doctor, hospitals: hospital}, // Add doctor and hospital (no duplicates)
+          },
+          { new: true }
+        );
+      } else {
+        // Create a new category if it doesn't exist
+        const newCategory = new Category({
+          categoryIcon: 'https://png.pngtree.com/png-vector/20190228/ourmid/pngtree-first-aid-icon-design-template-vector-isolated-png-image_707530.jpg', // Default icon, customize as needed
+          categoryName: cat,
+          doctors: [doctor],
+          hospitals: [hospital],
+        });
+        await newCategory.save();
+      }
+    }
+
 
     res.status(201).json({ message: "Doctor registered successfully!" });
   } catch (error) {
@@ -155,7 +175,6 @@ export const registerDoctor = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // Get all doctors
 export const getAllDoctors = async (req, res) => {
