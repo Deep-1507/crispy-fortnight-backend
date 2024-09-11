@@ -51,8 +51,8 @@ export const registerHospital = async (req, res) => {
 
     console.log("Received timingSlots:", timings);
 
-    const parsedSpecializations = Array.isArray(specialization) ? specialization : [specialization];
-  const parsedServices = Array.isArray(services) ? services : [services];
+    const parsedSpecializations = Array.isArray(specialization) ? specialization : JSON.parse(specialization);
+  const parsedServices = Array.isArray(services) ? services : JSON.parse(services);
 
     const hospital = new Hospital({
       hospitalName,

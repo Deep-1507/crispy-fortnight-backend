@@ -1,5 +1,4 @@
 
-
 import Doctor from "../models/doctorModel.js";
 import mongoose from "mongoose";
 import path from "path";
@@ -22,11 +21,24 @@ const uploadFile = (file, folder) => {
   return file.name;
 };
 
-// const validateTimingSlots = (timingSlots) => {
-//   return timingSlots.every(slot => 
-//     slot.day && slot.startTime && slot.endTime
-//   );
-// }
+
+export const checkEmailExists = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Check if a doctor with the given email already exists
+    const existingDoctor = await Doctor.findOne({ email });
+
+    if (existingDoctor) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    return res.status(200).json({ message: "Email is available" });
+  } catch (error) {
+    console.error("Error checking email:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
 // Register doctor
 export const registerDoctor = async (req, res) => {
@@ -84,6 +96,8 @@ export const registerDoctor = async (req, res) => {
       ? uploadFile(req.files.establishmentProof, "establishmentProof")
       : "";
 
+      const parsedDegree = Array.isArray(degree) ? degree : JSON.parse(degree);
+
     // Create new doctor record
     const doctor = new Doctor({
       doctorName,
@@ -99,7 +113,7 @@ export const registerDoctor = async (req, res) => {
       registrationCouncil,
       otherCouncil,
       registrationYear,
-      degree,
+      degree :  parsedDegree ,
       otherDegree,
       college,
       otherCollege,

@@ -9,8 +9,8 @@ const transporter = nodemailer.createTransport({
     port: 587, // or 465 for secure connections
     secure: false, // true for 465, false for other ports
     auth: {
-      user: 'uv84690@gmail.com', // Your email
-      pass: 'lvwpefogwgqfxiox', // Your email password
+      user: 'khyatig0206@gmail.com', // Your email
+      pass: 'xkdl xsfj wdau gtmw', // Your email password
     },
   });
 
@@ -34,7 +34,7 @@ export const sendVerificationEmail = async (req, res) => {
 
     // Send email with Nodemailer
     const mailOptions = {
-      from: 'uv84690@gmail.com',
+      from: 'khyatig0206@gmail.com',
       to: email,
       subject: 'Your Email Verification Code',
       text: `Your verification code is: ${verificationCode}`,

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+const { Schema } = mongoose;
 const doctorSchema = new mongoose.Schema({
   doctorName: { type: String, required: true }, // Add doctor's name for signup
   phone: { type: String, required: true }, // Add mobile number for signup
@@ -114,7 +114,12 @@ const hospitalSchema = new mongoose.Schema({
     },
   ],
   insuranceClaim: String,
-  doctors: [doctorSchema], // Field to store doctor references
+  
+  doctors: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Doctor', // Reference to Doctor documents associated with this category
+    default: [], // Default to an empty array
+  }],
 });
 
 const Hospital = mongoose.model("Hospital", hospitalSchema);
