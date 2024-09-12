@@ -1,6 +1,7 @@
 import express from "express";
 import Hospital from "../models/hospitalModel.js";
 import path from "path";
+import { sendApprovalHospital } from "../services/emailService.js";  
 import Category from "../models/categoryModel.js";
 import { fileURLToPath } from "url";
 const router = express.Router();
@@ -18,13 +19,22 @@ const uploadFile = (file, folder) => {
   return file.name;
 };
 
+const generateHospitalId = () => {
+  const date = new Date();
+  const year = date.getFullYear().toString().slice(-2); // Get last two digits of the year
+  const month = ('0' + (date.getMonth() + 1)).slice(-2); // Ensure two digits for month
+  const day = ('0' + date.getDate()).slice(-2); // Ensure two digits for day
+  const randomDigits = Math.floor(1000000 + Math.random() * 9000000); // Generate a random 7-digit number
+  return `HRN${year}${month}${day}${randomDigits}`;
+};
 
 // Route to register a new hospital
 export const registerHospital = async (req, res) => {
   try {
     const {
       hospitalName,
-      hospitalId,
+      // hospitalId,
+      email,
       category,
       specialization,
       services,
@@ -52,12 +62,14 @@ export const registerHospital = async (req, res) => {
     console.log("Received timingSlots:", timings);
 
     const parsedSpecializations = Array.isArray(specialization) ? specialization : JSON.parse(specialization);
-  const parsedServices = Array.isArray(services) ? services : JSON.parse(services);
-
+    const parsedServices = Array.isArray(services) ? services : JSON.parse(services);
+    const hospitalId = generateHospitalId();
+    
     const hospital = new Hospital({
       hospitalName,
       hospitalImage,
-      hospitalId,
+      hospitalId: hospitalId,
+      email,
       category: categories,
       specialization: parsedSpecializations, 
       services: parsedServices, 
@@ -143,7 +155,8 @@ export const getHospitalById = async (req, res) => {
   }
 };
 
-export const approveHospital = async (req, res) => {
+
+export const approveHospital = async (req, res, next) => {
   try {
     const { hospitalId } = req.params;
 
@@ -155,12 +168,13 @@ export const approveHospital = async (req, res) => {
     hospital.isApproved = true;
     await hospital.save();
 
+    // Send the approval email asynchronously
+    await sendApprovalHospital(hospital);
+
     res.status(200).json({ message: "Hospital approved successfully!" });
   } catch (error) {
     console.error("Error approving hospital:", error);
-    res
-      .status(500)
-      .json({ message: "Error approving hospital", error: error.message });
+    next(error); // Use next() to pass errors to the global error handler
   }
 };
 

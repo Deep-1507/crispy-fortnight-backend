@@ -3,7 +3,7 @@ import Doctor from "../models/doctorModel.js";
 import mongoose from "mongoose";
 import path from "path";
 import { fileURLToPath } from "url";
-import sendApprovalEmail from "../services/emailService.js";
+import {sendApprovalEmail} from "../services/emailService.js";
 import { sendRejectionEmail } from "../services/emailService.js";
 import Hospital from "../models/hospitalModel.js";
 import Category from "../models/categoryModel.js";
@@ -246,23 +246,21 @@ export const rejectDoctor = async (req, res) => {
     const doctorId = req.params.id;
     const { customMessage } = req.body; // Get custom message from request body
 
+    // Find the doctor in the database
     const doctor = await Doctor.findById(doctorId);
 
+    // If doctor not found, return 404
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    if (!doctor.isApproved) {
-      return res.status(400).json({ message: "Doctor is already rejected" });
-    }
-
-    doctor.isApproved = false; // Mark doctor as rejected
-    await doctor.save();
-
-    // Send the rejection email with the custom message
+    // Send the rejection email before deleting the doctor
     await sendRejectionEmail(doctor, customMessage);
 
-    res.status(200).json({ message: "Doctor rejected successfully" });
+    // Once the email is sent, delete the doctor from the database
+    await doctor.deleteOne();
+
+    res.status(200).json({ message: "Doctor rejected and deleted successfully" });
   } catch (error) {
     console.error("Error rejecting doctor:", error);
     res.status(500).json({ message: "Error rejecting doctor", error: error.message });
