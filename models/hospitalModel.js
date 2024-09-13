@@ -4,7 +4,7 @@ const { Schema } = mongoose;
 const hospitalSchema = new mongoose.Schema({
   hospitalName: { type: String, required: true },
   hospitalImage:{type:String},
-  hospitalId: { type: String, unique: true , required: true, },
+  hospitalId: { type: String, required: true, },
   email: {
     type: String,
     trim: true,
@@ -28,6 +28,8 @@ const hospitalSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  latitude: { type: Number },
+  longitude: { type: Number },
   totalBeds: {
     type: Number,
     required: true,
@@ -83,6 +85,7 @@ const hospitalSchema = new mongoose.Schema({
     ref: 'Doctor', // Reference to Doctor documents associated with this category
     default: [], // Default to an empty array
   }],
+  
 });
 
 const Hospital = mongoose.model("Hospital", hospitalSchema);

@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 
 const doctorSchema = new mongoose.Schema({
   doctorName: { type: String, required: true }, // Add doctor's name for signup
-  phone: { type: Number, required: true, unique: true }, // Add mobile number for signup
+  phone: { type: Number, required: true}, // Add mobile number for signup
   category: {
     type: [String], // Change from String to Array of Strings
     required: true,
@@ -17,7 +17,7 @@ const doctorSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true, // Ensure the email field is required
-    unique: true, // Ensure the email field is unique
+ // Ensure the email field is unique
     trim: true,
     lowercase: true,
   },
@@ -27,7 +27,7 @@ const doctorSchema = new mongoose.Schema({
   otherCouncil: { type: String },
   registrationYear: { type: String, required: true },
   degree: { type: [String],
-     required: true },
+  required: true },
   otherDegree: { type: String },
   college: { type: String, required: true },
   otherCollege: { type: String },
@@ -40,8 +40,8 @@ const doctorSchema = new mongoose.Schema({
   landmark: { type: String, required: true },
   address: { type: String, required: true },
   pincode: { type: Number, required: true },
-  latitude: { type: Number, required: true },
-  longitude: { type: Number, required: true },
+  latitude: { type: Number },
+  longitude: { type: Number },
   address: { type: String, required: true },
   pincode: { type: Number, required: true },
   identityProof: { type: String, required: true },

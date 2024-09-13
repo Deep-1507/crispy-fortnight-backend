@@ -40,6 +40,26 @@ export const checkEmailExists = async (req, res) => {
   }
 };
 
+
+export const checkPhoneExists = async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    // Check if a doctor with the given phone already exists
+    const existingDoctor = await Doctor.findOne({ phone });
+
+    if (existingDoctor) {
+      return res.status(400).json({ message: "Phone already exists" });
+    }
+
+    return res.status(200).json({ message: "Phone is available" });
+  } catch (error) {
+    console.error("Error checking phone:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
 // Register doctor
 export const registerDoctor = async (req, res) => {
   try {
@@ -78,9 +98,6 @@ export const registerDoctor = async (req, res) => {
 
     const categories = typeof category === "string" ? JSON.parse(category) : category;
 
-
-    console.log("Received timingSlots:", timingSlots);
-
     // Handle file uploads
     const identityProof = req.files.identityProof
       ? uploadFile(req.files.identityProof, "identityProof")
@@ -96,7 +113,7 @@ export const registerDoctor = async (req, res) => {
       ? uploadFile(req.files.establishmentProof, "establishmentProof")
       : "";
 
-      const parsedDegree = Array.isArray(degree) ? degree : JSON.parse(degree);
+    const parsedDegree = Array.isArray(degree) ? degree : JSON.parse(degree);
 
     // Create new doctor record
     const doctor = new Doctor({
@@ -113,7 +130,7 @@ export const registerDoctor = async (req, res) => {
       registrationCouncil,
       otherCouncil,
       registrationYear,
-      degree :  parsedDegree ,
+      degree: parsedDegree,
       otherDegree,
       college,
       otherCollege,
@@ -157,34 +174,52 @@ export const registerDoctor = async (req, res) => {
       let existingCategory = await Category.findOne({ categoryName: cat });
 
       if (existingCategory) {
-        // If the category exists, update it with both the doctor and hospital
-        await Category.findOneAndUpdate(
-          { categoryName: cat },
-          {
-            $addToSet: { doctors: doctor, hospitals: hospital}, // Add doctor and hospital (no duplicates)
-          },
-          { new: true }
-        );
+        // If the category is a subcategory (has a parentCategoryId)
+        if (existingCategory.parentCategoryId) {
+          // Update subcategory with doctor and hospital
+          await Category.findOneAndUpdate(
+            { categoryName: cat },
+            { $addToSet: { doctors: doctor, hospitals: hospital } }, // Add doctor and hospital to subcategory
+            { new: true }
+          );
+
+          // Find parent category
+          const parentCategory = await Category.findById(existingCategory.parentCategoryId);
+          if (parentCategory) {
+            // Update parent category with doctor and hospital
+            await Category.findByIdAndUpdate(
+              existingCategory.parentCategoryId,
+              { $addToSet: { doctors: doctor, hospitals: hospital } }, // Add doctor and hospital to parent category
+              { new: true }
+            );
+          }
+        } else {
+          // If the category is a parent category (parentCategoryId: null)
+          await Category.findOneAndUpdate(
+            { categoryName: cat },
+            { $addToSet: { doctors: doctor, hospitals: hospital } }, // Add doctor and hospital to parent category
+            { new: true }
+          );
+        }
       } else {
         // Create a new category if it doesn't exist
         const newCategory = new Category({
           categoryIcon: 'https://png.pngtree.com/png-vector/20190228/ourmid/pngtree-first-aid-icon-design-template-vector-isolated-png-image_707530.jpg', // Default icon, customize as needed
           categoryName: cat,
+          status: 'inactive',
           doctors: [doctor],
           hospitals: [hospital],
+          parentCategoryId: null // Default as a parent category (can be set dynamically if needed)
         });
         await newCategory.save();
       }
     }
 
-
     res.status(201).json({ message: "Doctor registered successfully!" });
   } catch (error) {
     // Handle duplicate key error
     if (error.code === 11000) {
-      return res
-        .status(400)
-        .json({ message: "Duplicate key error", details: error.keyValue });
+      return res.status(400).json({ message: "Duplicate key error", details: error.keyValue });
     }
     res.status(500).json({ message: error.message });
   }
@@ -281,5 +316,84 @@ export const getDoctorById = async (req, res) => {
   } catch (error) {
     console.error("Error fetching doctor:", error);
     res.status(500).json({ message: "Error fetching doctor", error: error.message });
+  }
+};
+
+
+export const searchDoctors = async (req, res) => {
+  try {
+    // Extract search parameters from the query
+    const { 
+      doctorName, 
+      phone, 
+      category, 
+      email, 
+      hospitalId, 
+      city, 
+      state, 
+      registrationNo, 
+      registrationCouncil, 
+      establishmentName,
+      // latitude, 
+      // longitude, 
+    } = req.query;
+
+    // Build a query object dynamically based on provided filters
+    const query = {};
+
+    // Search by doctorName (case-insensitive)
+    if (doctorName) query.doctorName = new RegExp(doctorName, 'i');
+    
+    // Search by phone number
+    if (phone) query.phone = phone;
+    
+    // // Search by category (array)
+    if (category) {
+      query.category = { 
+        $elemMatch: { $regex: category, $options: 'i' } 
+      };
+    }
+    
+    // Search by email
+    if (email) query.email = email;
+    
+    // Search by hospitalId and convert it to ObjectId
+    if (hospitalId) {
+      query.hospitalId = hospitalId;
+    }
+    
+    // Search by city and state
+    if (city) query.city = city;
+    if (state) query.state = state;
+    
+    // Search by registration number and council
+    if (registrationNo) query.registrationNo = registrationNo;
+    if (registrationCouncil) query.registrationCouncil = registrationCouncil;
+    
+    
+    // Search by establishment name (case-insensitive)
+    if (establishmentName) query.establishmentName = new RegExp(establishmentName, 'i');
+
+    // Search by geolocation (latitude and longitude)
+    // if (latitude && longitude) {
+    //   query.location = {
+    //     $near: {
+    //       $geometry: {
+    //         type: "Point",
+    //         coordinates: [parseFloat(longitude), parseFloat(latitude)],
+    //       },
+    //       $maxDistance: parseFloat(maxDistance), // Maximum distance in meters (default is 5000)
+    //     },
+    //   };
+    // }
+
+    // Find doctors matching the query
+    const doctors = await Doctor.find(query);
+
+    // Send the results back as JSON
+    res.json(doctors);
+  } catch (error) {
+    console.error("Error searching doctors:", error);
+    res.status(500).json({ message: "Error searching doctors", error: error.message });
   }
 };

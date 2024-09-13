@@ -41,6 +41,8 @@ export const registerHospital = async (req, res) => {
       description,
       city,
       state,
+      latitude,
+      longitude,
       totalBeds,
       juniorDoctors,
       seniorDoctors,
@@ -76,6 +78,8 @@ export const registerHospital = async (req, res) => {
       description,
       city,
       state,
+      latitude,
+      longitude,
       totalBeds,
       totalDoctorStaff,
       nursingStaff,
@@ -175,6 +179,66 @@ export const approveHospital = async (req, res, next) => {
   } catch (error) {
     console.error("Error approving hospital:", error);
     next(error); // Use next() to pass errors to the global error handler
+  }
+};
+
+export const searchHospitals = async (req, res) => {
+  try {
+    // Extract search parameters from the query
+    const { 
+      hospitalName, 
+      category, 
+      hospitalId, 
+      specialization, 
+      city, 
+      state, 
+      hospitalType, 
+      institutionType, 
+      services, 
+      email 
+    } = req.query;
+
+    // Build a query object dynamically based on provided filters
+    const query = {};
+
+    if (hospitalName) query.hospitalName = new RegExp(hospitalName, 'i'); // Case insensitive search
+    
+    if (category) {
+      query.category = { 
+        $elemMatch: { $regex: category, $options: 'i' } 
+      };
+    }
+    if (hospitalId) query.hospitalId = hospitalId;
+
+    // Use regex for specialization and services fields
+    if (specialization) {
+      query.specialization = { 
+        $elemMatch: { $regex: specialization, $options: 'i' } 
+      };
+    }
+    
+    if (city) query.city = city;
+    if (state) query.state = state;
+    if (hospitalType) query.hospitalType = hospitalType;
+    if (institutionType) query.institutionType = institutionType;
+
+    // Use regex for services array as well
+    if (services) {
+      query.services = { 
+        $elemMatch: { $regex: services, $options: 'i' } 
+      };
+    }
+    
+    if (email) query.email = email;
+
+    // Find hospitals matching the query
+    const hospitals = await Hospital.find(query);
+
+    // Send the results back as JSON
+    res.json(hospitals);
+  } catch (error) {
+    console.error("Error searching hospitals:", error);
+    res.status(500).json({ message: "Error searching hospitals", error: error.message });
   }
 };
 

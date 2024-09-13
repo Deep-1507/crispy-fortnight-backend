@@ -25,10 +25,7 @@ const categorySchema = new Schema({
     enum: ['active', 'inactive'], // Status of the category
     default: 'active', // Default status
   },
-  subcategories: [{
-    type: String,
-    default: [], // Default to an empty array
-  }],
+  
   updatedAt: {
     type: Date,
     default: Date.now, // Timestamp when the category was last updated
