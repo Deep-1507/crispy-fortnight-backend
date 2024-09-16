@@ -1,25 +1,10 @@
 
 import Doctor from "../models/doctorModel.js";
-import mongoose from "mongoose";
-import path from "path";
-import { fileURLToPath } from "url";
 import {sendApprovalEmail} from "../services/emailService.js";
 import { sendRejectionEmail } from "../services/emailService.js";
 import Hospital from "../models/hospitalModel.js";
 import Category from "../models/categoryModel.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Function to handle file uploads
-const uploadFile = (file, folder) => {
-  const uploadPath = path.join(__dirname, "../uploads", folder, file.name);
-  file.mv(uploadPath, (err) => {
-    if (err) {
-      throw err;
-    }
-  });
-  return file.name;
-};
 
 
 export const checkEmailExists = async (req, res) => {
@@ -66,6 +51,7 @@ export const registerDoctor = async (req, res) => {
     const {
       doctorName,
       category,
+      avatar,
       phone,
       otherCategory,
       password,
@@ -94,24 +80,18 @@ export const registerDoctor = async (req, res) => {
       timingSlots,
       description,
       consultancyFees,
+      identityProof1,
+      identityProof2,
+      medicalRegistrationProof,
+      establishmentProof
     } = req.body;
 
     const categories = typeof category === "string" ? JSON.parse(category) : category;
 
-    // Handle file uploads
-    const identityProof = req.files.identityProof
-      ? uploadFile(req.files.identityProof, "identityProof")
-      : "";
-    const identityProof2 = req.files.identityProof2
-      ? uploadFile(req.files.identityProof2, "identityProof2")
-      : "";
-    const avatar = req.files.avatar ? uploadFile(req.files.avatar, "avatar") : "";
-    const medicalRegistrationProof = req.files.medicalRegistrationProof
-      ? uploadFile(req.files.medicalRegistrationProof, "medicalRegistrationProof")
-      : "";
-    const establishmentProof = req.files.establishmentProof
-      ? uploadFile(req.files.establishmentProof, "establishmentProof")
-      : "";
+    console.log(identityProof1,
+      identityProof2)
+
+  
 
     const parsedDegree = Array.isArray(degree) ? degree : JSON.parse(degree);
 
@@ -148,7 +128,7 @@ export const registerDoctor = async (req, res) => {
       description,
       timingSlots: JSON.parse(timingSlots || "[]"), // Default to empty array if timingSlots is not provided
       consultancyFees,
-      identityProof,
+      identityProof1,
       identityProof2,
       medicalRegistrationProof,
       establishmentProof,
@@ -231,20 +211,14 @@ export const getAllDoctors = async (req, res) => {
     // Fetch all doctor records from the database
     const doctors = await Doctor.find({});
 
-    // Base URL for file serving
-    const baseUrl = `${req.protocol}://${req.get("host")}/uploads/`;
-
     // Map the doctor records to include full URLs for file proofs
     res.json(
       doctors.map((doctor) => ({
-        ...doctor._doc,
-        identityProof: doctor.identityProof ? `${baseUrl}identityProof/${doctor.identityProof}` : "",
-        identityProof2: doctor.identityProof2 ? `${baseUrl}identityProof2/${doctor.identityProof2}` : "",
-        medicalRegistrationProof: doctor.medicalRegistrationProof ? `${baseUrl}medicalRegistrationProof/${doctor.medicalRegistrationProof}` : "",
-        establishmentProof: doctor.establishmentProof ? `${baseUrl}establishmentProof/${doctor.establishmentProof}` : "",
-        avatar: doctor.avatar ? `${baseUrl}avatar/${doctor.avatar}` : "",
+        ...doctor._doc
+        
       }))
     );
+  
   } catch (error) {
     res.status(500).json({ message: "Error fetching doctors", error });
   }

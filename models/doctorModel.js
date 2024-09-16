@@ -44,7 +44,7 @@ const doctorSchema = new mongoose.Schema({
   longitude: { type: Number },
   address: { type: String, required: true },
   pincode: { type: Number, required: true },
-  identityProof: { type: String, required: true },
+  identityProof1: { type: String, required: true },
   identityProof2: { type: String, required: false }, 
   medicalRegistrationProof: { type: String, required: true },
   establishmentProof: { type: String, required: true },

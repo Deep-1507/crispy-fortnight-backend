@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import cloudinary from 'cloudinary'
 import fileUpload from "express-fileupload";
 import doctorRoutes from "./routes/doctorRoutes.js";
 import hospitalRoutes from "./routes/hospitalRoutes.js";
@@ -15,6 +16,12 @@ import { fileURLToPath } from 'url';  // <-- Import fileURLToPath from 'url'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+})
 
 const app = express();
 
