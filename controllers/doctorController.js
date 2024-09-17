@@ -305,17 +305,16 @@ export const searchDoctors = async (req, res) => {
     // Extract search parameters from the query
     const { 
       doctorName, 
-      phone, 
       category, 
-      email, 
       hospitalId, 
       city, 
       state, 
       registrationNo, 
       registrationCouncil, 
       establishmentName,
-      // latitude, 
-      // longitude, 
+      latitude, 
+      longitude,
+      maxDistance // Optional maximum distance (in meters)
     } = req.query;
 
     // Build a query object dynamically based on provided filters
@@ -324,23 +323,17 @@ export const searchDoctors = async (req, res) => {
     // Search by doctorName (case-insensitive)
     if (doctorName) query.doctorName = new RegExp(doctorName, 'i');
     
-    // Search by phone number
-    if (phone) query.phone = phone;
     
-    // // Search by category (array)
+    // Search by category (array)
     if (category) {
       query.category = { 
         $elemMatch: { $regex: category, $options: 'i' } 
       };
     }
     
-    // Search by email
-    if (email) query.email = email;
     
-    // Search by hospitalId and convert it to ObjectId
-    if (hospitalId) {
-      query.hospitalId = hospitalId;
-    }
+    // Search by hospitalId
+    if (hospitalId) query.hospitalId = hospitalId;
     
     // Search by city and state
     if (city) query.city = city;
@@ -350,22 +343,25 @@ export const searchDoctors = async (req, res) => {
     if (registrationNo) query.registrationNo = registrationNo;
     if (registrationCouncil) query.registrationCouncil = registrationCouncil;
     
-    
     // Search by establishment name (case-insensitive)
     if (establishmentName) query.establishmentName = new RegExp(establishmentName, 'i');
 
-    // Search by geolocation (latitude and longitude)
-    // if (latitude && longitude) {
-    //   query.location = {
-    //     $near: {
-    //       $geometry: {
-    //         type: "Point",
-    //         coordinates: [parseFloat(longitude), parseFloat(latitude)],
-    //       },
-    //       $maxDistance: parseFloat(maxDistance), // Maximum distance in meters (default is 5000)
-    //     },
-    //   };
-    // }
+    // Geolocation search using separate latitude and longitude fields
+    if (latitude && longitude) {
+      const maxDist = maxDistance ? parseFloat(maxDistance) : 5000; // Default to 5000 meters
+      const lat = parseFloat(latitude);
+      const lng = parseFloat(longitude);
+      
+      // Add a geospatial search using the separate latitude and longitude fields
+      query.latitude = {
+        $gte: lat - maxDist / 111000, // Approximate conversion meters to degrees latitude
+        $lte: lat + maxDist / 111000
+      };
+      query.longitude = {
+        $gte: lng - maxDist / (111000 * Math.cos(lat * (Math.PI / 180))), // Approximate conversion meters to degrees longitude
+        $lte: lng + maxDist / (111000 * Math.cos(lat * (Math.PI / 180)))
+      };
+    }
 
     // Find doctors matching the query
     const doctors = await Doctor.find(query);

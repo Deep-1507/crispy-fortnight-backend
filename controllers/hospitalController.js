@@ -181,7 +181,6 @@ export const searchHospitals = async (req, res) => {
       hospitalType, 
       institutionType, 
       services, 
-      email 
     } = req.query;
 
     // Build a query object dynamically based on provided filters
@@ -215,7 +214,7 @@ export const searchHospitals = async (req, res) => {
       };
     }
     
-    if (email) query.email = email;
+
 
     // Find hospitals matching the query
     const hospitals = await Hospital.find(query);
