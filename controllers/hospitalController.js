@@ -6,18 +6,6 @@ import Category from "../models/categoryModel.js";
 import { fileURLToPath } from "url";
 const router = express.Router();
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Function to handle file uploads
-const uploadFile = (file, folder) => {
-  const uploadPath = path.join(__dirname, "../uploads", folder, file.name);
-  file.mv(uploadPath, (err) => {
-    if (err) {
-      throw err;
-    }
-  });
-  return file.name;
-};
 
 const generateHospitalId = () => {
   const date = new Date();
@@ -33,6 +21,7 @@ export const registerHospital = async (req, res) => {
   try {
     const {
       hospitalName,
+      hospitalImage,
       // hospitalId,
       email,
       category,
@@ -57,10 +46,7 @@ export const registerHospital = async (req, res) => {
 
     const categories = typeof category === "string" ? JSON.parse(category) : category;
 
-    const hospitalImage = req.files.hospitalImage
-      ? uploadFile(req.files.hospitalImage, "hospitalImage")
-      : "";     
-
+    
     console.log("Received timingSlots:", timings);
 
     const parsedSpecializations = Array.isArray(specialization) ? specialization : JSON.parse(specialization);

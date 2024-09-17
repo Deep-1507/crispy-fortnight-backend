@@ -8,18 +8,6 @@ import { sendRejectionEmail } from "../services/emailService.js";
 import Hospital from "../models/hospitalModel.js";
 import Category from "../models/categoryModel.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Function to handle file uploads
-const uploadFile = (file, folder) => {
-  const uploadPath = path.join(__dirname, "../uploads", folder, file.name);
-  file.mv(uploadPath, (err) => {
-    if (err) {
-      throw err;
-    }
-  });
-  return file.name;
-};
 
 
 export const checkEmailExists = async (req, res) => {
@@ -65,6 +53,7 @@ export const registerDoctor = async (req, res) => {
   try {
     const {
       doctorName,
+      avatar,
       category,
       phone,
       otherCategory,
@@ -94,24 +83,15 @@ export const registerDoctor = async (req, res) => {
       timingSlots,
       description,
       consultancyFees,
+      identityProof,
+      identityProof2,
+      medicalRegistrationProof,
+      establishmentProof
     } = req.body;
 
     const categories = typeof category === "string" ? JSON.parse(category) : category;
 
-    // Handle file uploads
-    const identityProof = req.files.identityProof
-      ? uploadFile(req.files.identityProof, "identityProof")
-      : "";
-    const identityProof2 = req.files.identityProof2
-      ? uploadFile(req.files.identityProof2, "identityProof2")
-      : "";
-    const avatar = req.files.avatar ? uploadFile(req.files.avatar, "avatar") : "";
-    const medicalRegistrationProof = req.files.medicalRegistrationProof
-      ? uploadFile(req.files.medicalRegistrationProof, "medicalRegistrationProof")
-      : "";
-    const establishmentProof = req.files.establishmentProof
-      ? uploadFile(req.files.establishmentProof, "establishmentProof")
-      : "";
+   
 
     const parsedDegree = Array.isArray(degree) ? degree : JSON.parse(degree);
 

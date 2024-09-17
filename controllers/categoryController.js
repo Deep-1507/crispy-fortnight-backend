@@ -63,29 +63,60 @@ export const getCategories = async (req, res) => {
 
 export const searchCategories = async (req, res) => {
   try {
-    // Extract category name from query
-    const { categoryName } = req.query;
+    // Extract query parameters
+    const { categoryName, subCategoryName, status } = req.query;
 
-    // If no categoryName is provided, return all parent categories (those with parentCategoryId: null)
-    if (!categoryName) {
-      const parentCategories = await Category.find({ parentCategoryId: null });
-      return res.status(200).json(parentCategories);
+    // Build the query object for status
+    let query = {};
+    if (status) {
+      query.status = status;
     }
 
-    // If a categoryName is provided, find the category and its subcategories
-    const parentCategory = await Category.findOne({ categoryName: new RegExp(categoryName, 'i') });
+    // If both parentCategory and subCategory are mentioned in the query
+    if (categoryName && subCategoryName) {
+      // Find the parent category
+      const parentCategory = await Category.findOne({ categoryName: new RegExp(categoryName, 'i'), ...query }).select('-createdAt -updatedAt');
 
-    if (!parentCategory) {
-      return res.status(404).json({ message: `Category "${categoryName}" not found` });
+      if (!parentCategory) {
+        return res.status(404).json({ message: `Parent Category "${categoryName}" not found` });
+      }
+
+      // Find the subcategory within that parent category
+      const subCategory = await Category.findOne({ categoryName: new RegExp(subCategoryName, 'i'), parentCategoryId: parentCategory._id, ...query }).select('-createdAt -updatedAt');
+
+      if (!subCategory) {
+        return res.status(404).json({ message: `Subcategory "${subCategoryName}" not found under Parent Category "${categoryName}"` });
+      }
+
+      // Return both the parent category and the specific subcategory
+      return res.status(200).json({ parentCategory, subCategory });
     }
 
-    // Fetch subcategories based on parentCategoryId
-    const subcategories = await Category.find({ parentCategoryId: parentCategory._id });
+    // If only parentCategory is mentioned, return parent and its subcategories
+    if (categoryName) {
+      const parentCategory = await Category.findOne({ categoryName: new RegExp(categoryName, 'i'), ...query }).select('-createdAt -updatedAt');
 
-    // Return the parent category and its subcategories
-    res.status(200).json({ parentCategory, subcategories });
+      if (!parentCategory) {
+        return res.status(404).json({ message: `Category "${categoryName}" not found` });
+      }
+
+      const subcategories = await Category.find({ parentCategoryId: parentCategory._id, ...query }).select('-createdAt -updatedAt');
+      return res.status(200).json({ parentCategory, subcategories });
+    }
+
+    // If no categoryName is provided, return all parent categories
+    const parentCategories = await Category.find({ parentCategoryId: null, ...query }).select('-createdAt -updatedAt');
+    return res.status(200).json(parentCategories);
+    
   } catch (error) {
     console.error('Error fetching categories:', error);
     res.status(500).json({ message: 'Error fetching categories', error: error.message });
   }
 };
+
+
+
+
+// If both categoryName (parent category) and subCategoryName are present in the query, it finds the parent category and then finds the subcategory within it.
+// Returns both the parent category and the matching subcategory.
+// If only categoryName (parent category) is provided, it returns the parent category and all its subcategories.
