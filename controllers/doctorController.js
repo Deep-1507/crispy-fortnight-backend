@@ -206,29 +206,45 @@ export const registerDoctor = async (req, res) => {
 };
 
 // Get all doctors
+// export const getAllDoctors = async (req, res) => {
+//   try {
+//     // Fetch all doctor records from the database
+//     const doctors = await Doctor.find({});
+
+//     // Base URL for file serving
+//     const baseUrl = `${req.protocol}://${req.get("host")}/uploads/`;
+
+//     // Map the doctor records to include full URLs for file proofs
+//     res.json(
+//       doctors.map((doctor) => ({
+//         ...doctor._doc,
+//         identityProof: doctor.identityProof ? `${baseUrl}identityProof/${doctor.identityProof}` : "",
+//         identityProof2: doctor.identityProof2 ? `${baseUrl}identityProof2/${doctor.identityProof2}` : "",
+//         medicalRegistrationProof: doctor.medicalRegistrationProof ? `${baseUrl}medicalRegistrationProof/${doctor.medicalRegistrationProof}` : "",
+//         establishmentProof: doctor.establishmentProof ? `${baseUrl}establishmentProof/${doctor.establishmentProof}` : "",
+//         avatar: doctor.avatar ? `${baseUrl}avatar/${doctor.avatar}` : "",
+//       }))
+//     );
+//   } catch (error) {
+//     res.status(500).json({ message: "Error fetching doctors", error });
+//   }
+// };
+
 export const getAllDoctors = async (req, res) => {
   try {
-    // Fetch all doctor records from the database
     const doctors = await Doctor.find({});
-
-    // Base URL for file serving
-    const baseUrl = `${req.protocol}://${req.get("host")}/uploads/`;
-
-    // Map the doctor records to include full URLs for file proofs
-    res.json(
-      doctors.map((doctor) => ({
-        ...doctor._doc,
-        identityProof: doctor.identityProof ? `${baseUrl}identityProof/${doctor.identityProof}` : "",
-        identityProof2: doctor.identityProof2 ? `${baseUrl}identityProof2/${doctor.identityProof2}` : "",
-        medicalRegistrationProof: doctor.medicalRegistrationProof ? `${baseUrl}medicalRegistrationProof/${doctor.medicalRegistrationProof}` : "",
-        establishmentProof: doctor.establishmentProof ? `${baseUrl}establishmentProof/${doctor.establishmentProof}` : "",
-        avatar: doctor.avatar ? `${baseUrl}avatar/${doctor.avatar}` : "",
-      }))
-    );
+    res.json(doctors);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching doctors", error });
+    console.error("Error fetching hospitals:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching hospitals", error: error.message });
   }
 };
+
+
+
+
 
 // Approve a doctor
 export const approveDoctor = async (req, res) => {
