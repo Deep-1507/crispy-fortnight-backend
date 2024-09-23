@@ -21,7 +21,7 @@ export const registerHospital = async (req, res) => {
   try {
     const {
       hospitalName,
-      hospitalImage,
+      hospitalImages,
       // hospitalId,
       email,
       category,
@@ -48,14 +48,14 @@ export const registerHospital = async (req, res) => {
 
     
     console.log("Received timingSlots:", timings);
-
+    const parsedhospitalImages = Array.isArray(hospitalImages) ? hospitalImages : JSON.parse(hospitalImages);
     const parsedSpecializations = Array.isArray(specialization) ? specialization : JSON.parse(specialization);
     const parsedServices = Array.isArray(services) ? services : JSON.parse(services);
     const hospitalId = generateHospitalId();
     
     const hospital = new Hospital({
       hospitalName,
-      hospitalImage,
+      hospitalImages: parsedhospitalImages,
       hospitalId: hospitalId,
       email,
       category: categories,

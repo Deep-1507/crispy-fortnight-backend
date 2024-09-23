@@ -72,6 +72,17 @@ export const getCategoriesHome = async (req, res) => {
   }
 };
 
+export const getCategoriesParent = async (req, res) => {
+  try {
+    // Fetch 6 categories where parentCategoryId is null
+    const categories = await Category.find({ parentCategoryId: null })
+      .select('categoryName') // Select only the icon and name
+    res.status(200).json(categories); 
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 export const searchCategories = async (req, res) => {
   try {
