@@ -11,41 +11,50 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import path from 'path';
-import { fileURLToPath } from 'url';  // <-- Import fileURLToPath from 'url'
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// Serve static files from uploads folder
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Connect to MongoDB
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-});
+}).then(() => console.log('MongoDB connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-// Middleware
 app.use(express.json());
-app.use(cors());
 app.use(fileUpload());
 
-// Routes
 app.use("/api/doctors", doctorRoutes);
 app.use('/api/hospitals', hospitalRoutes);
 app.use('/api', searchRoutes);
 app.use('/api/emailVerification', emailVerificationRoute);
 app.use('/api/categories', categoryRoute);
 
-// Global error handler (put this at the end)
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal server error', error: err.message });
+app.use((req, res, next) => {
+  res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; script-src 'self' https://apis.google.com;");
+  next();
 });
 
-// Start the server
+app.use((err, req, res, next) => {
+  console.error('Error:', err.stack);
+  res.status(500).json({
+    message: 'Internal server error',
+    error: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : {}
+  });
+});
+
 app.listen(5000, () => {
   console.log("Server running on port 5000");
 });
