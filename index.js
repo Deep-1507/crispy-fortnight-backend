@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import fileUpload from "express-fileupload";
 import doctorRoutes from "./routes/doctorRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import addressRoutes from "./routes/addressRoutes.js";
 import hospitalRoutes from "./routes/hospitalRoutes.js";
 import searchRoutes from './routes/searchRoutes.js';
 import emailVerificationRoute from './routes/emailVerificationRoute.js';
@@ -21,7 +23,7 @@ const app = express();
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(cors({
-  origin: 'https://code-commanders--psi.vercel.app/',
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -40,6 +42,8 @@ app.use('/api/hospitals', hospitalRoutes);
 app.use('/api', searchRoutes);
 app.use('/api/emailVerification', emailVerificationRoute);
 app.use('/api/categories', categoryRoute);
+app.use("/api/users", userRoutes);
+app.use("/api/address", addressRoutes);
 
 app.use((req, res, next) => {
   res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; script-src 'self' https://apis.google.com;");
