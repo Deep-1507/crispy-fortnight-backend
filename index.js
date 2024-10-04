@@ -6,6 +6,7 @@ import hospitalRoutes from "./routes/hospitalRoutes.js";
 import searchRoutes from './routes/searchRoutes.js';
 import emailVerificationRoute from './routes/emailVerificationRoute.js';
 import categoryRoute from './routes/categoryRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
@@ -40,6 +41,7 @@ app.use('/api/hospitals', hospitalRoutes);
 app.use('/api', searchRoutes);
 app.use('/api/emailVerification', emailVerificationRoute);
 app.use('/api/categories', categoryRoute);
+app.use('/api/user', userRoutes )
 
 app.use((req, res, next) => {
   res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data:; script-src 'self' https://apis.google.com;");
