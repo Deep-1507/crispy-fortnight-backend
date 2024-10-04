@@ -12,7 +12,7 @@ export const userModal = async (req, res) => {
 
         if (user) {
             if (user.phone === phone) {
-                const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+                const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1y' });
                 return res.status(200).json({ token });
             } else {
                 return res.status(400).json({ message: "Phone number does not match." });
@@ -69,7 +69,56 @@ export const updateUser = async (req, res) => {
     }
 };
 
+export const getUserDetails = async (req, res) => {
+    const { fid } = req.query; // Extract fid from query params if provided
+    const userId = req.userId; // Extracted from the JWT in authMiddleware
+    let user;
+
+    try {
+        // If fid is provided, find user by fid, otherwise use userId from the JWT
+        const projection = 'fid phone fullName profileImage dob bloodGroup gender abhaId'; // Specify the fields you want to retrieve
+
+
+        user = await User.findById(userId).select(projection);
+
+
+        // If user is not found, return 404
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Return the user details
+        return res.status(200).json({ user });
+    } catch (error) {
+        console.error("Error in getUserDetails route:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
 
 
 
+export const getUserByfid = async (req, res) => {
+    const { fid } = req.query; // Extract fid from query params if provided
 
+    let user;
+
+    try {
+        // If fid is provided, find user by fid, otherwise use userId from the JWT
+        const projection = 'fid phone fullName profileImage dob bloodGroup gender abhaId'; // Specify the fields you want to retrieve
+        if (fid) {
+            user = await User.findOne({ fid }).select(projection);
+        }else{
+            return res.status(404).json({message : "fid not in the query "})
+        }
+        // If user is not found, return 404
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        // Return the user details
+        return res.status(200).json({ user });
+    } catch (error) {
+        console.error("Error in getUserDetails route:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
