@@ -3,6 +3,7 @@ const router = Router();
 import { userModal, updateUser, getUserDetails, getUserByfid,userModal2,createUser } from '../controllers/userController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
+
 router.post("/auth",userModal);
 router.put('/auth/update', authMiddleware,updateUser);
 router.post('/create', createUser);
