@@ -6,7 +6,7 @@ import userRoutes from "./routes/userRoutes.js";
 import addressRoutes from "./routes/addressRoutes.js";
 import hospitalRoutes from "./routes/hospitalRoutes.js";
 import searchRoutes from './routes/searchRoutes.js';
-import uploadRoutes from './routes/UploadRoutes.js';
+import uploadRoutes from './routes/imageRoutes.js';
 import emailVerificationRoute from './routes/emailVerificationRoute.js';
 import categoryRoute from './routes/categoryRoutes.js';
 import cors from "cors";
