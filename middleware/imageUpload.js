@@ -1,14 +1,17 @@
-import { v2 as cloudinary } from 'cloudinary';
+import pkg from 'cloudinary';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
 dotenv.config();
 
+// Destructure the `v2` property from the imported `cloudinary` package
+const { v2: cloudinary } = pkg;
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 // Controller function to handle image upload
@@ -21,7 +24,7 @@ export const imageUpload = async (req, res) => {
 
     // Upload the image to Cloudinary
     const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'uploads'
+      folder: 'uploads',
     });
 
     // Return the secure URL of the uploaded image
