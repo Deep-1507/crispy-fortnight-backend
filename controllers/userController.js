@@ -122,3 +122,70 @@ export const getUserByfid = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
+
+
+export const userModal2 = async (req, res) => {
+    const { phone, fid } = req.body;
+
+    try {
+        let user = await User.findOne({ fid });
+
+        if (user) {
+            if (user.phone === phone) {
+                const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1y' });
+                return res.status(200).json({ token });
+            } else {
+                return res.status(400).json({ message: "Phone number does not match." });
+            }
+        }
+
+        // Send response asking for confirmation from client
+        return res.status(404).json({ message: "Username does not exist. Do you want to create a new user?" });
+
+    } catch (error) {
+        console.error("Error in /auth route:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
+export const createUser = async (req, res) => {
+    const { phone, fid, fullName, profileImage, dob, bloodGroup, gender, abhaId } = req.body;
+
+    try {
+        // Check if user with the same fid already exists
+        let user = await User.findOne({ fid });
+        if (user) {
+            return res.status(400).json({ message: "User with this username already exists." });
+        }
+
+        // Create new user
+        user = new User({
+            phone,
+            fid,
+            fullName,
+            profileImage,
+            dob,
+            bloodGroup,
+            gender,
+            abhaId
+        });
+
+        await user.save();
+        const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: '1h' });
+        res.status(201).json({
+            message: "User created successfully.",
+            token
+        });
+    } catch (error) {
+        // Check if the error is a MongoDB duplicate key error for 'fid'
+        if (error instanceof mongoose.Error && error.code === 11000 && error.keyPattern && error.keyPattern.fid) {
+            return res.status(400).json({ message: "Username must be unique. Please enter a unique Username." });
+        }
+
+        console.error("Error creating user:", error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+};
