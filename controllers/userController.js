@@ -2,6 +2,7 @@ import  User from '../models/userModel.js';
 import jwt from 'jsonwebtoken';
 import { JWT_SECRET } from '../config.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
+import mongoose from 'mongoose';
 
 // user modal for mobile app
 export const userModal = async (req, res) => {
@@ -180,9 +181,15 @@ export const createUser = async (req, res) => {
             token
         });
     } catch (error) {
-        // Check if the error is a MongoDB duplicate key error for 'fid'
-        if (error instanceof mongoose.Error && error.code === 11000 && error.keyPattern && error.keyPattern.fid) {
-            return res.status(400).json({ message: "Username must be unique. Please enter a unique Username." });
+        if (error.code === 11000) {
+            // Check if the duplicate key error is for the phone field
+            if (error.keyPattern && error.keyPattern.phone) {
+                return res.status(400).json({ message: "Phone is already registered, try another number." });
+            }
+            // Check if the duplicate key error is for the fid field
+            if (error.keyPattern && error.keyPattern.fid) {
+                return res.status(400).json({ message: "Username must be unique. Please enter a unique Username." });
+            }
         }
 
         console.error("Error creating user:", error);

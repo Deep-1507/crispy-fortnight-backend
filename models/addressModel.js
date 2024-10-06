@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 
 const addressSchema = new mongoose.Schema({
     addressLine: { type: String, required: true },
-    latitude: { type: String, required: true },
-    longitude: { type: String, required: true },
+    latitude: { type: String},
+    longitude: { type: String},
     city: { type: String, required: true },
     state: { type: String, required: true },
     pincode: { type: String, required: true },
