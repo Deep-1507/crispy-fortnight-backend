@@ -186,3 +186,31 @@ export const setDefaultAddress = async (req, res) => {
         res.status(500).json({ message: "Error setting default address", error });
     }
 };
+
+
+
+export const deleteAddress = async (req,res)=>{
+    try {
+        const { addressId } = req.body;
+        const userId = req.userId; 
+
+        // Check if addressId is provided
+        if (!addressId) {
+            return res.status(400).json({ message: 'Address ID is required' });
+        }
+
+        // Find the address by ID and ensure it belongs to the user making the request
+        const address = await Address.findOne({ _id: addressId, userId });
+
+        if (!address) {
+            return res.status(404).json({ message: 'Address not found or not authorized to delete' });
+        }
+
+        // Delete the address
+        await Address.findByIdAndDelete(addressId);
+
+        res.status(200).json({ message: 'Address deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ error: 'Something went wrong', details: err.message });
+    }
+};
