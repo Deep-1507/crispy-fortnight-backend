@@ -89,11 +89,12 @@ export const registerDoctor = async (req, res) => {
       establishmentProof
     } = req.body;
 
-    const categories = typeof category === "string" ? JSON.parse(category) : category;
-
-   
-
-    const parsedDegree = Array.isArray(degree) ? degree : JSON.parse(degree);
+   const categories =
+      category && typeof category === "string"
+        ? JSON.parse(category)
+        : category || [];
+    const parsedDegree =
+      degree && Array.isArray(degree) ? degree : JSON.parse(degree || "[]");
 
     // Create new doctor record
     const doctor = new Doctor({
