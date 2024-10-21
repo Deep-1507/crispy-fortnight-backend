@@ -1,9 +1,11 @@
 // routes/doctorRoutes.js
 import { Router } from 'express';
+import multer from 'multer';
+const upload = multer();
 import { registerDoctor,getAllDoctors, approveDoctor,getDoctorById, rejectDoctor,checkEmailExists,checkPhoneExists,searchDoctors} from '../controllers/doctorController.js';
 const router = Router();
 
-router.post('/register', registerDoctor);
+router.post('/register',upload.none(), registerDoctor);
 router.get('/all', getAllDoctors);
 router.post("/check-email", checkEmailExists);
 router.post("/check-phone", checkPhoneExists);
